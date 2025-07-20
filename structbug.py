@@ -2,20 +2,43 @@
 import argparse
 import os
 import sys
+import subprocess
 
 def run_tilib():
-    # Versions starting with IDA 9.1 come with tilib out of the box
-    # If missing, install it manually
-    # Then add tilib to PATH
-    import subprocess
+    r"""
+    Uses tilib utilitary to parse IDA .til files
+    Versions starting with IDA 9.1 come with tilib out of the box
+    If missing, install manually
+    Then add tilib to PATH
+    """
 
-    proc = subprocess.Popen(["cat", "/etc/passwd"], stdout=subprocess.PIPE, shell=True)
-    (out, err) = proc.communicate()
-    print("program output:", out)
+    try:
+        res = subprocess.run(
+            "tilib -l tmp.til",
+            shell=True,
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        proc = subprocess.Popen(["tilib", "-l", "tmp.til"], stdout=subprocess.PIPE, shell=True)
+        (out, err) = proc.communicate()
+        print("program output:", out)
+    except subprocess.CalledProcessError as cpe:
+        print(f"Command failed with exit code {cpe.returncode}")
+        print(f"Error output:\n{cpe.stderr}")
+        print("[!] Make sure tilib is on your PATH, located in the $IDA_INSTALL/tools/tilib/ directory")
 
-def extract_til():
-    # Extract .til local types section from the idb/i64 file
-    with open(sys.argv[2][:-3] + "til", "rb") as db:
+def extract_til(idb):
+    r"""
+    Extract .til local types section from an idb/i64 file
+    """
+
+    try:
+        name = idb.split('.')[-2] + '.til'
+    except IndexError:
+        name = idb
+
+    with open(name, "rb") as db:
         data = db.read()
         start = data.find(b"IDATIL")
         db.seek(start)
@@ -27,8 +50,11 @@ def extract_til():
 
 
 def clean_ida_header(header):
-    # Remove default IDA declarations as I cant find __offset
-    # Anywhere and have no idea what it is
+    r"""
+    Remove default IDA declarations as I cant find __offset
+    Anywhere and have no idea what it is
+    """
+
     
     with open(header, "r") as f:
       lines = f.readlines()
@@ -44,13 +70,18 @@ def clean_ida_header(header):
     if exc_start == -1 or exc_end == -1:
         return
     
-    with open(sys.argv[1], "w") as o:
+    with open(header, "w") as o:
       for i in range(len(lines)):
         if i < exc_start or i > exc_end:
           o.write(lines[i])
 
 
 def produce_dwarf(header, output_name):
+    r"""
+    Produce a DWARF debug file containing custom types
+    in order to be used with gdb/lldb
+    """
+
     with open("./tmp.cpp", "w") as src:
         src.write(f'#include "{header}"\n')
     os.system("g++ -o tmp tmp.cpp -g3 -c -fno-eliminate-unused-debug-types -fno-eliminate-unused-debug-symbols -O0")
@@ -121,8 +152,7 @@ def main():
             #produce_pdb()
             exit(1)
     elif args.i64:
-        exit(1)
-        extract_til()
+        extract_til(args.i64)
         run_tilib()
 
 if __name__ == '__main__':
