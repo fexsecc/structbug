@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import sys
 
 #def run_tilib():
 #    # Versions starting with IDA 9.1 come with tilib out of the box
@@ -58,28 +59,57 @@ import os
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Add support for casting reverse engineered structures in your debugger")
-    group = parser.add_mutually_exclusive_group(required=True)
-    parser.add_argument('-H', "--header")
-    parser.add_argument('-I', "--i64")
-    args = parser.parse_args()
+    try:
+        dbg_formats = {
+            "linux"   : "dwarf",
+            "darwin"  : "dwarf",
+            "android" : "dwarf",
+            "win32"   : "pdb"
+        }
 
-    if not any((args.header, args.i64)):
-        print("[X] Please provide a valid type source.")
-        exit(2)
-    elif args.header and args.i64:
-        print("[X] More than one source provided.")
-        exit(2)
+        parser = argparse.ArgumentParser(
+                        prog='structbug',
+                        description='Add support for casting reverse engineered structures in your debugger'
+        )
 
-    #if len(sys.argv) < 2:
-    #    print("USAGE: ./structbug.py <header> <optional i64 DB file>")
-    #    exit(1)
+        parser.add_argument('-H', "--header", type=str, help="Provide header file to convert")
+        parser.add_argument('-I', "--i64", type=str, help="Extract types directly from an idb (tilib required in PATH)")
+        parser.add_argument('-o', '--output', type=str, help='Output file name (default: source_name.debug/pdb)')
+        parser.add_argument('-f', '--format', type=str, default=dbg_formats.get(sys.platform, 'unk'), help="Debug format DWARF/PDB. (default: current platform)")
+
+        args = parser.parse_args()
+
+        if len(sys.argv) < 2:
+            print("No options given. Run -h for a list of options")
+            exit(1)
+
+        if not any((args.header, args.i64)):
+            print("Source of type information required (ex: header, idb file)")
+            exit(1)
+
+        if args.format != 'dwarf' and args.format != 'pdb':
+            print("Unknown platform or format, supported platforms:")
+            print(dbg_formats.keys())
+            exit(1)
+
+        if not args.output:
+            if args.header:
+                args.output = args.header.split('.')[0] + ('.debug' if args.format == "dwarf" else '.pdb')
+            elif args.i64:
+                args.output = args.i64.split('.')[0] + ('.debug' if args.format == "dwarf" else '.pdb')
+
+
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        exit(1)
+
+    print(args)
+
     #elif len(sys.argv) == 2:
     #    clean_ida_header()
     #    produce_dwarf()
     #elif len(sys.argv) == 3:
-    #TODO: Implement argparse mutual exclusive for either --header or --i64
-    #    # TODO: implement i64 extraction of db
+    #     TODO: implement i64 extraction of db
     #    extract_til()
     #    run_tilib()
     #else:
