@@ -4,6 +4,8 @@ import os
 import sys
 import subprocess
 
+def_tmp_name = "3d801aa532c1cec3ee82d87a99fdf63f"
+
 def run_tilib():
     r"""
     Uses tilib utilitary to parse IDA .til files
@@ -12,21 +14,22 @@ def run_tilib():
     Then add tilib to PATH
     """
 
-    try:
-        res = subprocess.run(
-            "tilib -l tmp.til",
-            shell=True,
-            check=True,
-            capture_output=True,
-            text=True
-        )
-        proc = subprocess.Popen(["tilib", "-l", "tmp.til"], stdout=subprocess.PIPE, shell=True)
-        (out, err) = proc.communicate()
-        print("program output:", out)
-    except subprocess.CalledProcessError as cpe:
-        print(f"Command failed with exit code {cpe.returncode}")
-        print(f"Error output:\n{cpe.stderr}")
-        print("[!] Make sure tilib is on your PATH, located in the $IDA_INSTALL/tools/tilib/ directory")
+    print("[!] Ensure tilib is on your PATH, located in the $IDA_INSTALL/tools/tilib/ directory")
+    res = subprocess.run(
+        "tilib -l " + def_tmp_name + ".til",
+        shell=True,
+        capture_output=True,
+        text=True
+    )
+    
+    res.stdout = res.stdout.split('(enumerated by names)')[0]
+    idx = res.stdout.split('   8')[1].split('. ')[1:]
+
+    with open(def_tmp_name + ".h", "w") as h:
+        for i in range(len(idx)):
+            h.write(idx[i].split('\n')[0] + '\n')
+
+    os.system(f"rm -f {def_tmp_name}.til")
 
 def extract_til(idb):
     r"""
@@ -40,7 +43,7 @@ def extract_til(idb):
         end = data.find(b"IDAS")
         til_size = end - start
         til = db.read(til_size)
-        with open("./tmp.til", "wb") as o:
+        with open(def_tmp_name + ".til", "wb") as o:
           o.write(til)
 
 
@@ -71,17 +74,21 @@ def clean_ida_header(header):
           o.write(lines[i])
 
 
-def produce_dwarf(header, output_name):
+def produce_dwarf(header, output_name, discard_header=False):
     r"""
     Produce a DWARF debug file containing custom types
     in order to be used with gdb/lldb
     """
 
-    with open("./tmp.cpp", "w") as src:
+    with open(def_tmp_name + ".cpp", "w") as src:
         src.write(f'#include "{header}"\n')
-    os.system("g++ -o tmp tmp.cpp -g3 -c -fno-eliminate-unused-debug-types -fno-eliminate-unused-debug-symbols -O0")
-    os.system(f"objcopy --only-keep-debug tmp {output_name}")
-    os.system("rm -f tmp tmp.cpp")
+    os.system(f"g++ -o {def_tmp_name} {def_tmp_name}.cpp -g3 -c -fno-eliminate-unused-debug-types -fno-eliminate-unused-debug-symbols -O0")
+    os.system(f"objcopy --only-keep-debug {def_tmp_name} {output_name}")
+    os.system(f"rm -f {def_tmp_name} {def_tmp_name}.cpp")
+
+    if discard_header:
+        os.system(f"rm -f {header}")
+    print("[+] DWARF file created.")
 
 
 def main():
@@ -149,6 +156,13 @@ def main():
     elif args.i64:
         extract_til(args.i64)
         run_tilib()
+        if args.format == 'dwarf':
+            produce_dwarf(def_tmp_name + ".h", args.output, discard_header=True)
+        elif args.format == 'pdb':
+            # TODO: Implement pdb creation
+            #produce_pdb()
+            exit(1)
+
 
 if __name__ == '__main__':
     main()
