@@ -1,0 +1,5 @@
+# IDA database extensions, used for testing
+*.i64
+*.til
+*.id*
+*.nam
