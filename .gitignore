@@ -3,4 +3,16 @@
 *.til
 *.id*
 *.nam
-.gdb_history
+
+# Hidden files
+.*
+!.gitignore
+
+# Misc code and build artifacts
+*.c
+*.cpp
+*.h
+
+# Debug information files
+*.debug
+*.pdb
