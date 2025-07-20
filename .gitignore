@@ -3,3 +3,4 @@
 *.til
 *.id*
 *.nam
+.gdb_history
