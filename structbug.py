@@ -33,12 +33,7 @@ def extract_til(idb):
     Extract .til local types section from an idb/i64 file
     """
 
-    try:
-        name = idb.split('.')[-2] + '.til'
-    except IndexError:
-        name = idb
-
-    with open(name, "rb") as db:
+    with open(idb, "rb") as db:
         data = db.read()
         start = data.find(b"IDATIL")
         db.seek(start)
