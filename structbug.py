@@ -94,9 +94,15 @@ def main():
 
         if not args.output:
             if args.header:
-                args.output = args.header.split('.')[0] + ('.debug' if args.format == "dwarf" else '.pdb')
+                try:
+                    args.output = args.header.split('.')[-2] + ('.debug' if args.format == "dwarf" else '.pdb')
+                except IndexError:
+                    args.output = args.header + ('.debug' if args.format == "dwarf" else '.pdb')
             elif args.i64:
-                args.output = args.i64.split('.')[0] + ('.debug' if args.format == "dwarf" else '.pdb')
+                try:
+                    args.output = args.i64.split('.')[-2] + ('.debug' if args.format == "dwarf" else '.pdb')
+                except IndexError:
+                    args.output = args.i64 + ('.debug' if args.format == "dwarf" else '.pdb')
 
 
     except Exception as e:
@@ -104,7 +110,6 @@ def main():
         exit(1)
 
     print(args)
-
     #elif len(sys.argv) == 2:
     #    clean_ida_header()
     #    produce_dwarf()
