@@ -12,6 +12,9 @@
 *.c
 *.cpp
 *.h
+*.obj
+*.ilk
+*.exe
 
 # Debug information files
 *.debug

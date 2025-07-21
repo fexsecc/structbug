@@ -3,8 +3,30 @@ import argparse
 import os
 import sys
 import subprocess
+from struct import pack
 
 def_tmp_name = "3d801aa532c1cec3ee82d87a99fdf63f"
+
+# Change this
+cl_path = r"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"
+
+def write_pdb_guid(pdb_path):
+    r"""
+    Modifies GUID and age of a PDB. WIP
+    """
+    with open(pdb_path, "r+b") as pdb:
+        # Modify Age
+        pdb.seek(0x69008)
+        pdb.write(pack('<I', 1337))
+        # Modify GUID
+        pdb.seek(0x6900c)
+        # First 8 bytes are LE and last 8 are BE
+        pdb.write(pack('<Q', 0xcafebabecafebabe) + b'\xde\xad\xfa\xce\xca\xfe\xba\xbe')
+
+
+def produce_pdb():
+    print("[!] Ensure you changed the path of cl with yours. To get it run cmd --> cd / --> dir /s cl.exe and copy the path of the x64 cl")
+
 
 def run_tilib():
     r"""
