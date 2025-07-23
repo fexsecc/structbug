@@ -19,6 +19,7 @@ def produce_pdb(header, output_name, discard_header=False):
     if vcvarsall_path:
         vcvars = vcvarsall_path
     else:
+        # https://stackoverflow.com/a/64744522
         vcvars = r"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat"
 
     if not os.path.exists(vcvars):
@@ -26,6 +27,9 @@ def produce_pdb(header, output_name, discard_header=False):
         exit(1)
     else:
         print("[+] Found MSVC compiler")
+
+    # cl /Zi /Od /EHsc ..\..\types\main.cpp /link /DEBUG:FULL /PDB:types.pdb /OUT:types.exe /SUBSYSTEM:CONSOLE
+    #res = subprocess.run(vcvars + "amd64 && " + "")
 
     # TODO: finish
 
