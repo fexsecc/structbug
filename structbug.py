@@ -8,24 +8,26 @@ from struct import pack
 def_tmp_name = "3d801aa532c1cec3ee82d87a99fdf63f"
 
 # Change this
-cl_path = r"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"
+vcvarsall_path = r""
 
-def write_pdb_guid(pdb_path):
+def produce_pdb(header, output_name, discard_header=False):
     r"""
-    Modifies GUID and age of a PDB. WIP
+    Produce a PDB file containing custom types
+    in order to be used within windbg
     """
-    with open(pdb_path, "r+b") as pdb:
-        # Modify Age
-        pdb.seek(0x69008)
-        pdb.write(pack('<I', 1337))
-        # Modify GUID
-        pdb.seek(0x6900c)
-        # First 8 bytes are LE and last 8 are BE
-        pdb.write(pack('<Q', 0xcafebabecafebabe) + b'\xde\xad\xfa\xce\xca\xfe\xba\xbe')
 
+    if vcvarsall_path:
+        vcvars = vcvarsall_path
+    else:
+        vcvars = r"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat"
 
-def produce_pdb():
-    print("[!] Ensure you changed the path of cl with yours. To get it run cmd --> cd / --> dir /s cl.exe and copy the path of the x64 cl")
+    if not os.path.exists(vcvars):
+        print("[-] Couldn't find MSVC compiler")
+        exit(1)
+    else:
+        print("[+] Found MSVC compiler")
+
+    # TODO: finish
 
 
 def run_tilib():
@@ -172,9 +174,7 @@ def main():
         if args.format == 'dwarf':
             produce_dwarf(args.header, args.output)
         elif args.format == 'pdb':
-            # TODO: Implement pdb creation
-            #produce_pdb()
-            exit(1)
+            produce_pdb(args.header, args.output)
     elif args.i64:
         extract_til(args.i64)
         run_tilib()
