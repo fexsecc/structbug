@@ -7,9 +7,6 @@ from struct import pack
 
 def_tmp_name = "3d801aa532c1cec3ee82d87a99fdf63f"
 
-# Change this
-vcvarsall_path = r""
-
 def clean_windows_ida_header():
     r"""
     Remove default IDA windows types as they
@@ -167,12 +164,12 @@ def main():
         if not args.output:
             if args.header:
                 try:
-                    args.output = args.header.split('.')[-2] + ('.debug' if args.format == "dwarf" else '.pdb')
+                    args.output = args.header.split('.')[0] + ('.debug' if args.format == "dwarf" else '.pdb')
                 except IndexError:
                     args.output = args.header + ('.debug' if args.format == "dwarf" else '.pdb')
             elif args.i64:
                 try:
-                    args.output = args.i64.split('.')[-2] + ('.debug' if args.format == "dwarf" else '.pdb')
+                    args.output = args.i64.split('.')[0] + ('.debug' if args.format == "dwarf" else '.pdb')
                 except IndexError:
                     args.output = args.i64 + ('.debug' if args.format == "dwarf" else '.pdb')
 
