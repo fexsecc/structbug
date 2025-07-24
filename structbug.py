@@ -15,7 +15,7 @@ def clean_windows_ida_header():
     Remove default IDA windows types as they
     also contain weird ida-only macros
     """
-    with open(f"{def_tmp_name}.h" "r") as f:
+    with open(f"{def_tmp_name}.h", "r") as f:
         lines = f.readlines()
     with open(f"{def_tmp_name}.h", "w") as f:
         # Common types used in Windows
