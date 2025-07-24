@@ -65,7 +65,7 @@ def run_tilib():
         for i in range(len(idx)):
             h.write(idx[i].split('\n')[0] + '\n')
 
-    os.system(f"rm -f {def_tmp_name}.til")
+    os.system(f"rm {def_tmp_name}.til")
 
 def extract_til(idb):
     r"""
