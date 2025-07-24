@@ -16,23 +16,16 @@ def produce_pdb(header, output_name, discard_header=False):
     in order to be used within windbg
     """
 
-    if vcvarsall_path:
-        vcvars = vcvarsall_path
-    else:
-        # https://stackoverflow.com/a/64744522
-        vcvars = r"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat"
+    with open(def_tmp_name + ".cpp", "w") as src:
+        src.write('#include "' + header + '"\n int main() {}\n')
 
-    if not os.path.exists(vcvars):
-        print("[-] Couldn't find MSVC compiler")
-        exit(1)
-    else:
-        print("[+] Found MSVC compiler")
+    os.system(f"clang++ -o {def_tmp_name}.exe {def_tmp_name}.cpp -g3 -c -fno-eliminate-unused-debug-types -O0")
+    os.system(f"Remove-Item -Force {def_tmp_name}.exe {def_tmp_name}.ilk {def_tmp_name}.cpp")
 
-    # cl /Zi /Od /EHsc ..\..\types\main.cpp /link /DEBUG:FULL /PDB:types.pdb /OUT:types.exe /SUBSYSTEM:CONSOLE
-    #res = subprocess.run(vcvars + "amd64 && " + "")
+    if discard_header:
+        os.system(f"rm -f {header}")
 
-    # TODO: finish
-
+    print("[+] PDB file created.")
 
 def run_tilib():
     r"""
@@ -185,9 +178,7 @@ def main():
         if args.format == 'dwarf':
             produce_dwarf(def_tmp_name + ".h", args.output, discard_header=True)
         elif args.format == 'pdb':
-            # TODO: Implement pdb creation
-            #produce_pdb()
-            exit(1)
+            produce_pdb(def_tmp_name + ".h", args.output, discard_header=True)
 
 
 if __name__ == '__main__':
