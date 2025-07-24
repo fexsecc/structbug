@@ -4,7 +4,9 @@ import os
 import sys
 import subprocess
 from struct import pack
+import colorama
 
+colorama.init(autoreset=True)
 def_tmp_name = "3d801aa532c1cec3ee82d87a99fdf63f"
 
 def clean_windows_ida_header():
@@ -37,7 +39,7 @@ def produce_pdb(header, output_name, discard_header=False):
     if discard_header:
         os.system(f"powershell /c Remove-Item -Force {header}")
 
-    print("[+] PDB file created.")
+    print(colorama.Fore.GREEN + "[+] PDB file created.")
 
 def run_tilib():
     r"""
@@ -47,7 +49,7 @@ def run_tilib():
     Then add tilib to PATH
     """
 
-    print("[!] Ensure tilib is on your PATH, located in the $IDA_INSTALL/tools/tilib/ directory")
+    print(colorama.Fore.YELLOW + "[!] Ensure tilib is on your PATH, located in the $IDA_INSTALL/tools/tilib/ directory")
     res = subprocess.run(
         "tilib -l " + def_tmp_name + ".til",
         shell=True,
@@ -124,7 +126,7 @@ def produce_dwarf(header, output_name, discard_header=False):
 
     if discard_header:
         os.system(f"rm -f {header}")
-    print("[+] DWARF file created.")
+    print(colorama.Fore.GREEN + "[+] DWARF file created.")
 
 
 def main():
