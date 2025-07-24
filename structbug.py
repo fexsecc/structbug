@@ -10,14 +10,14 @@ def_tmp_name = "3d801aa532c1cec3ee82d87a99fdf63f"
 # Change this
 vcvarsall_path = r""
 
-def clean_windows_ida_header(header):
+def clean_windows_ida_header():
     r"""
     Remove default IDA windows types as they
     also contain weird ida-only macros
     """
-    with open(header, "r") as f:
+    with open(f"{def_tmp_name}.h" "r") as f:
         lines = f.readlines()
-    with open(header, "w") as f:
+    with open(f"{def_tmp_name}.h", "w") as f:
         # Common types used in Windows
         f.write("#include <Windows.h>\n")
         f.writeslines(lines[36:])
@@ -197,7 +197,7 @@ def main():
         if args.format == 'dwarf':
             produce_dwarf(def_tmp_name + ".h", args.output, discard_header=True)
         elif args.format == 'pdb':
-            clean_windows_ida_header(args.header)
+            clean_windows_ida_header()
             produce_pdb(def_tmp_name + ".h", args.output, discard_header=True)
 
 
