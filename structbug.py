@@ -65,7 +65,10 @@ def run_tilib():
         for i in range(len(idx)):
             h.write(idx[i].split('\n')[0] + '\n')
 
-    os.system(f"rm {def_tmp_name}.til")
+    if sys.platform != "win32":
+        os.system(f"rm -f {def_tmp_name}.til")
+    else:
+        os.system(f"del {def_tmp_name}.til")
 
 def extract_til(idb):
     r"""
