@@ -20,5 +20,4 @@ options:
 ```
 
 # TODO
-- Windows pdb support
 - Ghidra support
