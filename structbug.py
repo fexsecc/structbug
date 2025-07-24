@@ -20,7 +20,7 @@ def clean_windows_ida_header():
     with open(f"{def_tmp_name}.h", "w") as f:
         # Common types used in Windows
         f.write("#include <Windows.h>\n")
-        f.writeslines(lines[36:])
+        f.writelines(lines[36:])
 
 def produce_pdb(header, output_name, discard_header=False):
     r"""
