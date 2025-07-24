@@ -19,11 +19,14 @@ def produce_pdb(header, output_name, discard_header=False):
     with open(def_tmp_name + ".cpp", "w") as src:
         src.write('#include "' + header + '"\n int main() {}\n')
 
-    os.system(f"clang++ -o {def_tmp_name}.exe {def_tmp_name}.cpp -g3 -c -fno-eliminate-unused-debug-types -O0")
-    os.system(f"Remove-Item -Force {def_tmp_name}.exe {def_tmp_name}.ilk {def_tmp_name}.cpp")
+    os.system(f"clang++ -o {def_tmp_name}.exe {def_tmp_name}.cpp -g3 -fno-eliminate-unused-debug-types -O0")
+    os.system(f"powershell /c Remove-Item -Force {def_tmp_name}.cpp")
+    os.system(f"powershell /c Remove-Item -Force {def_tmp_name}.ilk")
+    os.system(f"powershell /c Remove-Item -Force {def_tmp_name}.exe")
+    os.system(f"ren {def_tmp_name}.pdb {output_name}")
 
     if discard_header:
-        os.system(f"rm -f {header}")
+        os.system(f"powershell /c Remove-Item -Force {header}")
 
     print("[+] PDB file created.")
 
@@ -157,6 +160,10 @@ def main():
                     args.output = args.i64.split('.')[-2] + ('.debug' if args.format == "dwarf" else '.pdb')
                 except IndexError:
                     args.output = args.i64 + ('.debug' if args.format == "dwarf" else '.pdb')
+
+        # Make sure windows cmd autocomplete does not screw us up
+        if args.output[0] == '\\':
+            args.output = args.output[1:]
 
 
     except Exception as e:
