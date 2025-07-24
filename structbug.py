@@ -174,13 +174,16 @@ def main():
                     args.output = args.i64 + ('.debug' if args.format == "dwarf" else '.pdb')
 
         # Make sure windows cmd autocomplete does not screw us up
-        if args.output[0] == '\\':
-            args.output = args.output[1:]
+        try:
+            args.output = args.output.split("\\")[-1]
+        except IndexError:
+            args.output = args.output
 
 
     except Exception as e:
         print(f"Unexpected error: {e}")
         exit(1)
+
 
     if args.header:
         # In case the header is still taken from IDA,
