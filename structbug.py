@@ -21,7 +21,7 @@ def clean_windows_ida_header():
         f.write("#include <Windows.h>\n")
         f.writelines(lines[36:])
 
-def produce_pdb(header, output_name, discard_header=False):
+def produce_pdb(header, output_name, compiler="clang++", discard_header=False):
     r"""
     Produce a PDB file containing custom types
     in order to be used within windbg
@@ -30,7 +30,7 @@ def produce_pdb(header, output_name, discard_header=False):
     with open(def_tmp_name + ".cpp", "w") as src:
         src.write('#include "' + header + '"\n int main() {}\n')
 
-    os.system(f"clang++ -o {def_tmp_name}.exe {def_tmp_name}.cpp -g3 -fno-eliminate-unused-debug-types -O0")
+    os.system(f"{compiler} -o {def_tmp_name}.exe {def_tmp_name}.cpp -g3 -fno-eliminate-unused-debug-types -O0")
     os.system(f"powershell /c Remove-Item -Force {def_tmp_name}.cpp")
     os.system(f"powershell /c Remove-Item -Force {def_tmp_name}.ilk")
     os.system(f"powershell /c Remove-Item -Force {def_tmp_name}.exe")
@@ -112,7 +112,7 @@ def clean_ida_header(header):
           o.write(lines[i])
 
 
-def produce_dwarf(header, output_name, discard_header=False):
+def produce_dwarf(header, output_name, toolchain_prefix="", discard_header=False):
     r"""
     Produce a DWARF debug file containing custom types
     in order to be used with gdb/lldb
@@ -120,8 +120,8 @@ def produce_dwarf(header, output_name, discard_header=False):
 
     with open(def_tmp_name + ".cpp", "w") as src:
         src.write(f'#include "{header}"\n')
-    os.system(f"g++ -o {def_tmp_name} {def_tmp_name}.cpp -g3 -c -fno-eliminate-unused-debug-types -fno-eliminate-unused-debug-symbols -O0")
-    os.system(f"objcopy --only-keep-debug {def_tmp_name} {output_name}")
+    os.system(f"{toolchain_prefix}g++ -o {def_tmp_name} {def_tmp_name}.cpp -g3 -c -fno-eliminate-unused-debug-types -fno-eliminate-unused-debug-symbols -O0")
+    os.system(f"{toolchain_prefix}objcopy --only-keep-debug {def_tmp_name} {output_name}")
     os.system(f"rm -f {def_tmp_name} {def_tmp_name}.cpp")
 
     if discard_header:
@@ -147,6 +147,7 @@ def main():
         parser.add_argument('-I', "--i64", type=str, help="Extract types directly from an idb (tilib required in PATH)")
         parser.add_argument('-o', '--output', type=str, help='Output file name (default: source_name.debug/pdb)')
         parser.add_argument('-f', '--format', type=str, default=dbg_formats.get(sys.platform, 'unk'), help="Debug format DWARF/PDB. (default: current platform)")
+        parser.add_argument('-c', '--compiler-init', type=str, default=None, help="When building PDB: custom compiler path; When building DWARF: toolchain prefix in the form: arm-none-")
 
         args = parser.parse_args()
 
@@ -193,9 +194,9 @@ def main():
         clean_ida_header(args.header)
 
         if args.format == 'dwarf':
-            produce_dwarf(args.header, args.output)
+            produce_dwarf(args.header, args.output, args.compiler_init)
         elif args.format == 'pdb':
-            produce_pdb(args.header, args.output)
+            produce_pdb(args.header, args.output, args.compiler_init)
     elif args.i64:
         extract_til(args.i64)
         run_tilib()
