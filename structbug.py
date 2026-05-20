@@ -41,7 +41,7 @@ def produce_pdb(header, output_name, compiler="clang++", discard_header=False):
 
     print(colorama.Fore.GREEN + "[+] PDB file created.")
 
-def run_tilib():
+def run_tilib(custom_path):
     r"""
     Uses tilib utilitary to parse IDA .til files
     Versions starting with IDA 9.1 come with tilib out of the box
@@ -49,9 +49,9 @@ def run_tilib():
     Then add tilib to PATH
     """
 
-    print(colorama.Fore.YELLOW + "[!] Ensure tilib is on your PATH, located in the $IDA_INSTALL/tools/tilib/ directory")
+    print(colorama.Fore.YELLOW + "[!] Ensure you use -t or that tilib is on your PATH, located in the $IDA_INSTALL/tools/tilib/ directory")
     res = subprocess.run(
-        "tilib -l " + def_tmp_name + ".til",
+        f"{custom_path} -l " + def_tmp_name + ".til",
         shell=True,
         capture_output=True,
         text=True
@@ -144,10 +144,11 @@ def main():
         )
 
         parser.add_argument('-H', "--header", type=str, help="Provide header file to convert")
-        parser.add_argument('-I', "--i64", type=str, help="Extract types directly from an idb (tilib required in PATH)")
+        parser.add_argument('-I', "--i64", type=str, help="Extract types directly from an idb (use with -t or have tilib in PATH)")
         parser.add_argument('-o', '--output', type=str, help='Output file name (default: source_name.debug/pdb)')
         parser.add_argument('-f', '--format', type=str, default=dbg_formats.get(sys.platform, 'unk'), help="Debug format DWARF/PDB. (default: current platform)")
         parser.add_argument('-c', '--compiler-init', type=str, default=None, help="When building PDB: custom compiler path; When building DWARF: toolchain prefix in the form: arm-none-")
+        parser.add_argument('-t', '--tilib-path', type=str, default="tilib", help="Full path for tilib")
 
         args = parser.parse_args()
 
@@ -199,7 +200,7 @@ def main():
             produce_pdb(args.header, args.output, args.compiler_init)
     elif args.i64:
         extract_til(args.i64)
-        run_tilib()
+        run_tilib(args.tilib_path)
         if args.format == 'dwarf':
             produce_dwarf(def_tmp_name + ".h", args.output, discard_header=True)
         elif args.format == 'pdb':
